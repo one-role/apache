@@ -1,0 +1,102 @@
+---
+# vim:ff=unix ts=2 sw=2 ai expandtab ft=yaml.ansible:
+- name: apache | ensure apache webserver
+  yum:
+    name: httpd
+    state: present
+
+- name: apache | ensure apache webserver tools
+  yum:
+    name: httpd-tools
+    state: present
+
+- name: apache | ensure apache ssl module
+  yum:
+    name: mod_ssl
+    state: present
+
+- name: apache | ensure apache password library
+  yum:
+    name: python-passlib
+    state: present
+
+- name: apache | ensure webroot directory
+  file:
+    name: /var/www/html/
+    state: directory
+    owner: root
+    group: root
+    mode: 0755
+    setype: httpd_sys_content_t
+
+- name: apache | ensure default configs
+  template:
+    src: "{{ item }}"
+    dest: "/etc/httpd/conf.d/{{ item | basename | regex_replace('.j2$', '') }}"
+    owner: root
+    group: root
+    mode: 0644
+    setype: httpd_config_t
+  loop:
+    - 000-default.conf.j2
+    - 010-ssl.conf.j2
+  notify: restart_httpd
+
+- name: apache | ensure all modules installed
+  yum:
+    state: present
+    name: "{{ apache_modules_install }}"
+
+- name: apache | ensure all modules enabled
+  apache2_module:
+    state: present
+    name: "{{ item }}"
+  loop: "{{ apache_modules_enable }}"
+  notify: restart_httpd
+
+- name: apache | ensure all modules disabled
+  apache2_module:
+    state: absent
+    name: "{{ item }}"
+  loop: "{{ apache_modules_disable }}"
+  notify: restart_httpd
+
+- name: apache | configure server status
+  template:
+    src: 020-server-status.conf.j2
+    dest: /etc/httpd/conf.d/020-server-status.conf
+    owner: root
+    group: root
+    mode: 0644
+    setype: httpd_config_t
+  notify: restart_httpd
+  when: apache_status
+
+- name: apache | configure server status authentication
+  htpasswd:
+    path: "{{ apache_status_htpasswd_file }}"
+    create: yes
+    state: present
+    name: "{{ apache_status_user }}"
+    password: "{{ apache_status_pass }}"
+    owner: root
+    group: apache
+    mode: 0640
+    setype: httpd_config_t
+  when: apache_status and apache_status_auth
+
+- name: apache | ensure apache running
+  service:
+    name: httpd
+    state: started
+    enabled: yes
+
+- name: apache | allow incoming web traffic
+  firewalld:
+    service: "{{ item }}"
+    state: enabled
+    permanent: true
+    immediate: true
+  loop:
+    - http
+    - https

@@ -1,0 +1,13 @@
+---
+# vim:ff=unix ts=2 sw=2 ai expandtab ft=yaml:
+
+apache_modules_install: []
+apache_modules_enable: []
+apache_modules_disable: []
+
+apache_status: no
+apache_status_url: '/server-status'
+apache_status_auth: yes
+apache_status_htpasswd_file: /etc/httpd/conf.d/020-server-status.htpass
+apache_status_user: apache
+apache_status_pass: apache

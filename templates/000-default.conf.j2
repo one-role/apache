@@ -1,0 +1,32 @@
+# vi: set sw=4 ts=4 ai:
+#
+# Ansible information:
+#     Filename : {{ template_path | regex_replace("/.*/ansible[^/]*/", ".../") }}
+#     Hostname : {{ template_host }}
+#     Rolename : {{ role_name }}
+#
+
+<VirtualHost *:80>
+	ServerName default
+	ServerAdmin root@localhost
+
+	# Vhost docroot
+	DocumentRoot "/var/www/html"
+
+	# Directories, there should at least be a declaration for /var/www/html
+	<Directory "/var/www/html">
+		Options Indexes FollowSymLinks MultiViews
+		AllowOverride None
+		Order allow,deny
+		Allow from all
+	</Directory>
+
+	# Logging
+	ErrorLog "/var/log/httpd/default_error.log"
+	ServerSignature Off
+	CustomLog "/var/log/httpd/access_log" combined
+</VirtualHost>
+
+# -------------------------------------------------------------------
+# Copyright (c) 2012-today by {{ company }}
+# -------------------------------------------------------------------

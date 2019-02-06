@@ -1,0 +1,9 @@
+<Location {{ apache_status_url }}>
+    SetHandler server-status
+    {% if apache_status_auth %}
+    AuthUserFile {{ apache_status_htpasswd_file }}
+    AuthType Basic
+    AuthName "Apache Server Status for host {{ ansible_facts.fqdn }}"
+    Require user {{ apache_status_user }}
+    {% endif %}
+</Location>
